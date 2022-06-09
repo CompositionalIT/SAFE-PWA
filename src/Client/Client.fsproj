@@ -7,8 +7,22 @@
     <ItemGroup>
         <None Include="index.html" />
         <None Include="paket.references" />
+        <Compile Include="ServiceWorker.fs" />
+        <Compile Include="DataAccess.fs" />
+        <Compile Include="Api.fs" />
         <Compile Include="Index.fs" />
         <Compile Include="App.fs" />
+    </ItemGroup>
+    <ItemGroup>
+      <Content Include="public\manifest.json" />
+      <Content Include="public\Images\android-icons-144x144.png" />
+      <Content Include="public\Images\android-icons-192x192.png" />
+      <Content Include="public\Images\android-icons-36x36.png" />
+      <Content Include="public\Images\android-icons-48x48.png" />
+      <Content Include="public\Images\android-icons-72x72.png" />
+      <Content Include="public\Images\android-icons-96x96.png" />
+      <Content Include="public\Images\safe_favicon.png" />
+      <Content Include="public\favicon.png" />
     </ItemGroup>
     <ItemGroup>
         <ProjectReference Include="..\Shared\Shared.fsproj" />

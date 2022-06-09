@@ -1,8 +1,12 @@
 module Index
 
 open Elmish
-open Fable.Remoting.Client
 open Shared
+open Api
+
+let clearAllData _ =
+    ServiceWorker.unregisterAllServiceWorkers ()
+    DataAccess.destroyDatabase ()
 
 type Model = { Todos: Todo list; Input: string }
 
@@ -11,11 +15,6 @@ type Msg =
     | SetInput of string
     | AddTodo
     | AddedTodo of Todo
-
-let todosApi =
-    Remoting.createApi ()
-    |> Remoting.withRouteBuilder Route.builder
-    |> Remoting.buildProxy<ITodosApi>
 
 let init () : Model * Cmd<Msg> =
     let model = { Todos = []; Input = "" }

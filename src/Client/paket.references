@@ -8,3 +8,8 @@ Fable.Remoting.Client
 Feliz
 Feliz.Bulma
 Fulma
+Fable.Promise
+Fable.Browser.Navigator
+Fable.Fetch
+Fable.Browser.Url
+Fable.Browser.Worker
