@@ -50,6 +50,15 @@ let navBrand =
                 ]
             ]
         ]
+        Bulma.navbarItem.a [
+            prop.href "https://safe-stack.github.io/"
+            navbarItem.isActive
+
+            // Important! Clear personal data from db when logging out
+            prop.onClick clearAllData
+
+            prop.text "Logout"
+        ]
     ]
 
 let containerBox (model: Model) (dispatch: Msg -> unit) =

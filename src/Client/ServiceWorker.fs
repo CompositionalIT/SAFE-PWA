@@ -42,12 +42,12 @@ and [<AllowNullLiteral>] CacheStorage =
     abstract ``match``: request: Request * ?options: CacheStorageOptions -> JS.Promise<Response>
     abstract ``open``: cacheName: string -> JS.Promise<Cache>
 
-let CACHE_NAME = "SAFE-PWA-Cache-v19"
+let CACHE_NAME = "SAFE-PWA-Cache-v1"
 
 let resources = [|
     "app.js"
     "/Images/safe_favicon.png"
-    "app.html"
+    "index.html"
     "manifest.json"
     "/"
     "https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.14.0/webfonts/fa-solid-900.woff"
