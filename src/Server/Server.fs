@@ -12,11 +12,10 @@ module Storage =
     let addTodos (todos: Todo seq) =
         if todos |> Seq.forall (fun todo -> Todo.isValid todo.Description) then
             savedTodos.AddRange todos
+            printfn $"*** Uploaded Todos ***\n%A{todos}"
             Ok()
         else
             Error "Invalid todo found"
-
-
 
 let todosApi =
     { uploadTodos =

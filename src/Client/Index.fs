@@ -16,8 +16,9 @@ type Msg =
     | SetInput of string
     | AddTodo
     | AddedTodo of bool
-    | UploadTodos
-    | UploadedTodos of unit
+    | UploadTodos 
+    | UploadedTodos of Todo list
+    | TodosUpdated of Todo array
 
 let init () : Model * Cmd<Msg> =
     let model = { Todos = List.empty; Input = "" }
@@ -43,8 +44,20 @@ let update (msg: Msg) (model: Model) : Model * Cmd<Msg> =
         // Probably want to show an error if it fails
         model, Cmd.none
     | UploadTodos ->
-        model, Cmd.OfAsync.perform todosApi.uploadTodos model.Todos UploadedTodos
-    | UploadedTodos () -> model, Cmd.none
+        let notUploadedTodos =
+            model.Todos
+            |> List.filter (fun todo -> not todo.Uploaded)
+        model, Cmd.OfAsync.perform todosApi.uploadTodos notUploadedTodos (fun () -> UploadedTodos notUploadedTodos)
+    | UploadedTodos uploadedTodos ->
+        model, Cmd.OfPromise.perform Todos.setTodosUploaded (Array.ofList uploadedTodos) TodosUpdated
+    | TodosUpdated updatedTodos ->
+        let todos =
+            model.Todos
+            |> List.map (fun todo ->
+                match updatedTodos |> Array.tryFind (fun r -> r.Id = todo.Id) with
+                | Some newTodo -> newTodo
+                | None -> todo)
+        { model with Todos = todos }, Cmd.none
 
 open Feliz
 open Feliz.Bulma
@@ -98,7 +111,14 @@ let containerBox (model: Model) (dispatch: Msg -> unit) =
                         color.isPrimary
                         prop.disabled (Todo.isValid model.Input |> not)
                         prop.onClick (fun _ -> dispatch AddTodo)
-                        prop.text "Add"
+                        prop.text "Save"
+                    ]
+                ]
+                Bulma.control.p [
+                    Bulma.button.a [
+                        color.isInfo
+                        prop.onClick (fun _ -> dispatch UploadTodos)
+                        prop.text "Upload"
                     ]
                 ]
             ]

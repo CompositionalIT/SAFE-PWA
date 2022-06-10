@@ -3,6 +3,7 @@ module DataAccess
 open Fable.Core
 open Fable.Core.JsInterop
 open Shared
+open System
 
 type OpenRevisions =
     | All
@@ -121,3 +122,23 @@ module Todos =
         | Some o -> db.put (todo.Serialise (), o)
         | None -> db.put (todo.Serialise ())
         |> Promise.map (fun res -> res.ok)
+
+    let setTodosUploaded (todos: Todo array) = promise {
+        let! response =
+            todos
+            |> Array.map (fun reading ->
+                let uploadedReading =
+                    { reading with Uploaded = true }
+                uploadedReading.Serialise() :> obj)
+            |> db.bulkDocs
+
+        return
+            response
+            |> Array.map (fun doc ->
+                let id = Guid.Parse doc.id
+                todos
+                |> Array.tryFind (fun reading -> reading.Id = id)
+                |> Option.map (fun meterReading ->
+                    { meterReading with Uploaded = true; Revision = Some (Revision doc.rev) }))
+            |> Array.choose id
+    }

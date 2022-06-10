@@ -55,22 +55,25 @@ type FindRequest =
 type Todo =
     { Id: Guid
       Revision : Revision option // must include if updating existing record
+      Uploaded: bool
       Description: string }
 
     static member getFields =
-        [ "_id"; "_rev"; "description"; ]
+        [ "_id"; "_rev"; "uploaded"; "description"; ]
         
     static member Deserialise obj =
         let todo =
-            unbox<{| _id: string; _rev: string; description: string; |}> obj
+            unbox<{| _id: string; _rev: string; uploaded: bool; description: string; |}> obj
         { Id = (Guid.Parse todo._id)
           Revision = todo._rev |> Revision |> Some
+          Uploaded = todo.uploaded
           Description = todo.description  }
 
     member this.Serialise () =
         {| _id = this.Id
            _rev = this.Revision |> Option.map (fun rev -> rev.Value)
            description = this.Description
+           uploaded = this.Uploaded
            documentType = "Todo" |}
         
 module Todo =
@@ -80,6 +83,7 @@ module Todo =
     let create (description: string) =
         { Id = Guid.NewGuid()
           Revision = None
+          Uploaded = false
           Description = description }
 
 module Route =

@@ -42,7 +42,7 @@ and [<AllowNullLiteral>] CacheStorage =
     abstract ``match``: request: Request * ?options: CacheStorageOptions -> JS.Promise<Response>
     abstract ``open``: cacheName: string -> JS.Promise<Cache>
 
-let CACHE_NAME = "SAFE-PWA-Cache-v4"
+let CACHE_NAME = "SAFE-PWA-Cache-v9"
 
 let resources = [|
     "app.js"
@@ -90,8 +90,8 @@ self.addEventListener("fetch", (fun event ->
     let url = req?url |> URL.Create
     // check if request is made by chrome extensions or web page
     // if request is made for web page url must contains http.
-    if not (urlString.Contains("http")) then
-        () // skip the request. if request is not made with http protocol
+    if not (urlString.Contains("http")) || (req?method <> "GET") then
+        ()
     else
         // Don't handle login / logout paths (original request or Active Directory redirects etc) 
         if urlString.Contains("logout") then
