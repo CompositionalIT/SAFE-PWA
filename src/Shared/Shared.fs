@@ -2,10 +2,6 @@ namespace Shared
 
 open System
 
-type Id =
-    | Id of Guid
-    member this.Value = match this with | Id id -> id
-
 type Revision =
     | Revision of string
     member this.Value = match this with | Revision rev -> rev
@@ -56,14 +52,34 @@ type FindRequest =
     { Selector: Map<string, Query list>
       Sort: string list }
       
-type Todo = { Id: Guid; Description: string }
+type Todo =
+    { Id: Guid
+      Revision : Revision option // must include if updating existing record
+      Description: string }
 
+    static member getFields =
+        [ "_id"; "_rev"; "description"; ]
+        
+    static member Deserialise obj =
+        let todo =
+            unbox<{| _id: string; _rev: string; description: string; |}> obj
+        { Id = (Guid.Parse todo._id)
+          Revision = todo._rev |> Revision |> Some
+          Description = todo.description  }
+
+    member this.Serialise () =
+        {| _id = this.Id
+           _rev = this.Revision |> Option.map (fun rev -> rev.Value)
+           description = this.Description
+           documentType = "Todo" |}
+        
 module Todo =
     let isValid (description: string) =
         String.IsNullOrWhiteSpace description |> not
 
     let create (description: string) =
         { Id = Guid.NewGuid()
+          Revision = None
           Description = description }
 
 module Route =
@@ -71,5 +87,4 @@ module Route =
         sprintf "/api/%s/%s" typeName methodName
 
 type ITodosApi =
-    { getTodos: unit -> Async<Todo list>
-      addTodo: Todo -> Async<Todo> }
+    { uploadTodos: Todo list -> Async<unit> }

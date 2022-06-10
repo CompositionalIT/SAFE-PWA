@@ -66,7 +66,6 @@ type PouchDb =
     abstract destroy : unit -> JS.Promise<unit>
     abstract find : DbFindRequest ->  JS.Promise<DbFindResponse>
 
-
 let pouchDbFind: obj = importDefault "pouchdb-find"
 
 let pouchdb name : PouchDb =
@@ -87,3 +86,38 @@ let getDatabaseInfo () = promise {
               DocCount = info.doc_count
               UpdateSeq = info.update_seq }
     }
+
+module Todos =
+
+    let findTodos () =
+        let request =
+            { Selector = Map ["documentType", [ Equal "Todo" ]]; Sort = [] }
+
+        {| selector =
+            request.Selector
+            |> Map.toArray
+            |> Array.map(fun (propName, queries) ->
+                let queryObject =
+                    queries
+                    |> List.map Query.toSelector
+                    |> List.map (fun (selector, value) -> selector, box value)
+                    |> List.toArray
+                    |> createObj
+                propName, queryObject)
+            |> createObj
+
+           fields = Todo.getFields |> List.toArray
+           sort =
+                if request.Sort |> List.isEmpty then
+                    None
+                else request.Sort |> List.toArray |> Some |}
+        |> db.find
+        |> Promise.map (fun response ->
+            response.docs
+            |> Array.map Todo.Deserialise)
+
+    let putTodo (todo: Todo) opts =
+        match opts with
+        | Some o -> db.put (todo.Serialise (), o)
+        | None -> db.put (todo.Serialise ())
+        |> Promise.map (fun res -> res.ok)

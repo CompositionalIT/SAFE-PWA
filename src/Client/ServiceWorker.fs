@@ -42,7 +42,7 @@ and [<AllowNullLiteral>] CacheStorage =
     abstract ``match``: request: Request * ?options: CacheStorageOptions -> JS.Promise<Response>
     abstract ``open``: cacheName: string -> JS.Promise<Cache>
 
-let CACHE_NAME = "SAFE-PWA-Cache-v1"
+let CACHE_NAME = "SAFE-PWA-Cache-v4"
 
 let resources = [|
     "app.js"

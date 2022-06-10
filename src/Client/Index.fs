@@ -3,6 +3,7 @@ module Index
 open Elmish
 open Shared
 open Api
+open DataAccess
 
 let clearAllData _ =
     ServiceWorker.unregisterAllServiceWorkers ()
@@ -11,29 +12,39 @@ let clearAllData _ =
 type Model = { Todos: Todo list; Input: string }
 
 type Msg =
-    | GotTodos of Todo list
+    | GotTodos of Todo array
     | SetInput of string
     | AddTodo
-    | AddedTodo of Todo
+    | AddedTodo of bool
+    | UploadTodos
+    | UploadedTodos of unit
 
 let init () : Model * Cmd<Msg> =
-    let model = { Todos = []; Input = "" }
-
-    let cmd = Cmd.OfAsync.perform todosApi.getTodos () GotTodos
-
+    let model = { Todos = List.empty; Input = "" }
+    let cmd = Cmd.OfPromise.perform Todos.findTodos () GotTodos
     model, cmd
 
 let update (msg: Msg) (model: Model) : Model * Cmd<Msg> =
     match msg with
-    | GotTodos todos -> { model with Todos = todos }, Cmd.none
-    | SetInput value -> { model with Input = value }, Cmd.none
+    | GotTodos todos ->
+        { model with Todos = List.ofArray todos }, Cmd.none
+    | SetInput value ->
+        { model with Input = value }, Cmd.none
     | AddTodo ->
-        let todo = Todo.create model.Input
-
-        let cmd = Cmd.OfAsync.perform todosApi.addTodo todo AddedTodo
-
-        { model with Input = "" }, cmd
-    | AddedTodo todo -> { model with Todos = model.Todos @ [ todo ] }, Cmd.none
+        if Todo.isValid model.Input then
+            let todo = Todo.create model.Input
+            let model = { model with Input = ""; Todos = todo::model.Todos }
+            let cmd = Cmd.OfPromise.perform (Todos.putTodo todo) None AddedTodo
+            model, cmd
+        else
+            // Probably want to show an error if invalid
+            model, Cmd.none
+    | AddedTodo succeeded ->
+        // Probably want to show an error if it fails
+        model, Cmd.none
+    | UploadTodos ->
+        model, Cmd.OfAsync.perform todosApi.uploadTodos model.Todos UploadedTodos
+    | UploadedTodos () -> model, Cmd.none
 
 open Feliz
 open Feliz.Bulma
