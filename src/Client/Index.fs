@@ -18,6 +18,7 @@ type Msg =
     | AddedTodo of bool
     | UploadTodos 
     | UploadedTodos of Todo list
+    | UploadFailed of exn
     | TodosUpdated of Todo array
 
 let init () : Model * Cmd<Msg> =
@@ -38,16 +39,16 @@ let update (msg: Msg) (model: Model) : Model * Cmd<Msg> =
             let cmd = Cmd.OfPromise.perform (Todos.putTodo todo) None AddedTodo
             model, cmd
         else
-            // Probably want to show an error if invalid
+            printfn "Invalid todo"
             model, Cmd.none
     | AddedTodo succeeded ->
-        // Probably want to show an error if it fails
+        printfn "Failed to add todo"
         model, Cmd.none
     | UploadTodos ->
         let notUploadedTodos =
             model.Todos
             |> List.filter (fun todo -> not todo.Uploaded)
-        model, Cmd.OfAsync.perform todosApi.uploadTodos notUploadedTodos (fun () -> UploadedTodos notUploadedTodos)
+        model, Cmd.OfAsync.either todosApi.uploadTodos notUploadedTodos (fun () -> UploadedTodos notUploadedTodos) UploadFailed
     | UploadedTodos uploadedTodos ->
         model, Cmd.OfPromise.perform Todos.setTodosUploaded (Array.ofList uploadedTodos) TodosUpdated
     | TodosUpdated updatedTodos ->
@@ -58,6 +59,9 @@ let update (msg: Msg) (model: Model) : Model * Cmd<Msg> =
                 | Some newTodo -> newTodo
                 | None -> todo)
         { model with Todos = todos }, Cmd.none
+    | UploadFailed exn->
+        printfn $"Failed to upload todos. Are you offline? Exception message:{exn.Message} "
+        model, Cmd.none
 
 open Feliz
 open Feliz.Bulma
